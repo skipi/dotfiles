@@ -1,0 +1,42 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+ARCH="$HOME/Workspace/architecture"
+
+if [[ $# -eq 1 ]]; then
+  selected="$1"
+else
+  selected=$(
+    {
+      [ -d "$ARCH/repos" ]     && fd . "$ARCH/repos"     --min-depth 1 --max-depth 1 --type d
+      [ -d "$ARCH/worktrees" ] && fd . "$ARCH/worktrees" --min-depth 2 --max-depth 2 --type d
+      [ -d "$ARCH/projects" ]  && fd . "$ARCH/projects"  --min-depth 1 --max-depth 1 --type d
+      echo "$ARCH"
+      echo "$HOME/dotfiles"
+    } | sed "s|^$HOME/|~/|" | fzf --prompt="session > " --height=100% --border --reverse
+  )
+  selected="${selected/#\~/$HOME}"
+fi
+
+[[ -z "$selected" ]] && exit 0
+
+leaf=$(basename "$selected")
+parent=$(basename "$(dirname "$selected")")
+grandparent=$(basename "$(dirname "$(dirname "$selected")")")
+
+if [[ "$grandparent" == "worktrees" ]]; then
+  name="${parent}__${leaf}"
+else
+  name="$leaf"
+fi
+name=$(printf '%s' "$name" | tr '.:' '__')
+
+if ! tmux has-session -t="$name" 2>/dev/null; then
+  tmux new-session -ds "$name" -c "$selected"
+fi
+
+if [[ -z "${TMUX:-}" ]]; then
+  tmux attach -t "$name"
+else
+  tmux switch-client -t "$name"
+fi
