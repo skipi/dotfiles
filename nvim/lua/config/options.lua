@@ -53,6 +53,11 @@ opt.grepformat = "%f:%l:%c:%m"
 
 opt.sessionoptions = { "buffers", "curdir", "tabpages", "winsize", "help" }
 
+vim.filetype.add({
+  extension = { jsonl = "jsonl", ndjson = "jsonl", jsonlines = "jsonl" },
+})
+vim.treesitter.language.register("json", "jsonl")
+
 vim.api.nvim_create_autocmd("TextYankPost", {
   group = vim.api.nvim_create_augroup("highlight_yank", { clear = true }),
   callback = function() vim.hl.on_yank({ timeout = 150 }) end,
