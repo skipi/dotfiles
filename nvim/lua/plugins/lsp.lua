@@ -58,6 +58,34 @@ return {
         },
       })
 
+      vim.lsp.config("rust_analyzer", {
+        settings = {
+          ["rust-analyzer"] = {
+            checkOnSave = true,
+            check = {
+              command = "clippy",
+              allTargets = true,
+              workspace = true,
+            },
+            diagnostics = {
+              enable = true,
+              styleLints = { enable = true },
+            },
+            procMacro = { enable = true },
+            cargo = { buildScripts = { enable = true } },
+            inlayHints = {
+              closureReturnTypeHints = { enable = "always" },
+              typeHints = { enable = true },
+              chainingHints = { enable = true },
+              parameterHints = { enable = true },
+              closingBraceHints = { enable = true, minLines = 25 },
+              maxLength = 30,
+            },
+          },
+        },
+      })
+      vim.lsp.enable("rust_analyzer")
+
       vim.lsp.config("yamlls", {
         settings = {
           yaml = { keyOrdering = false, validate = true },
@@ -93,6 +121,7 @@ return {
     opts = {
       formatters_by_ft = {
         lua = { "stylua" },
+        rust = { "rustfmt" },
         go = { "gofumpt", "goimports" },
         elixir = { "mix_format" },
         ruby = { "rubocop" },

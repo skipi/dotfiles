@@ -246,7 +246,7 @@ Prefix is `Ctrl-a`. Press it, release, then the key.
 | `Ctrl-a g` | lazygit in a new window |
 | `Ctrl-a H/J/K/L` | Resize the pane, repeatable |
 | `Ctrl-a r` | Reload tmux.conf |
-| `Ctrl-a a` | Send a literal `Ctrl-a` — start of line in zsh |
+| `Ctrl-a` `Ctrl-a` | Send a literal `Ctrl-a` — start of line in zsh |
 
 ### tmux copy mode
 

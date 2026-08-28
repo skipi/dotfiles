@@ -39,6 +39,10 @@ Managed by Mason, declared in `lua/plugins/lsp.lua` under `ensure_installed`: `l
 
 `ruby_lsp` runs `bundle install` in the project on first attach. In a repo whose gems are not installed locally it will sit there failing until you run `bundle install` yourself — that is the repo's state, not a config problem.
 
+`rust_analyzer` is deliberately **not** in `ensure_installed`. It comes from rustup (`rustup component add rust-analyzer`), which keeps it version-matched to the toolchain and lets it honour a project's `rust-toolchain.toml`; a Mason-installed copy is a standalone release that drifts from it. It is turned on with an explicit `vim.lsp.enable("rust_analyzer")` because `automatic_enable` only covers servers Mason installed.
+
+Rust diagnostics come from `cargo clippy` via `checkOnSave`, so clippy and rustc warnings appear **on write**, not as you type — rust-analyzer's own type errors are live. Both are tagged by source (`rustc`, `clippy`) in the diagnostic list.
+
 `stylua` is explicitly excluded from `automatic_enable`: Mason maps it to an LSP server (`stylua --lsp`) that duplicates what conform already does.
 
 ## Formatting
