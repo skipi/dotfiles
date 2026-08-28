@@ -19,6 +19,8 @@ bin/tmux-sessionizer       fzf jump to any repo/worktree/project as a session
 
 Every keybinding lives in `lua/config/keymaps.lua`. Nothing is hidden in a plugin spec.
 
+[CHEATSHEET.md](CHEATSHEET.md) is the full keybinding reference, plus notes on adding plugins.
+
 ## Install on a new machine
 
 ```sh

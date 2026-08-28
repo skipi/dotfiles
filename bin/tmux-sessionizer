@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-ARCH="$HOME/Workspace/architecture"
+ARCH="${SESSIONIZER_ROOT:-$HOME/Workspace/architecture}"
 
 if [[ $# -eq 1 ]]; then
   selected="$1"
