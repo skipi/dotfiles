@@ -14,8 +14,14 @@ end
 
 vim.opt.rtp:prepend(lazypath)
 
+local config_dir = vim.fn.stdpath("config")
+local lockfile = vim.uv.fs_access(config_dir, "W")
+    and config_dir .. "/lazy-lock.json"
+    or vim.fn.stdpath("state") .. "/lazy-lock.json"
+
 require("lazy").setup({
   spec = { { import = "plugins" } },
+  lockfile = lockfile,
   install = { colorscheme = { "tokyonight" } },
   checker = { enabled = true, notify = false },
   change_detection = { notify = false },

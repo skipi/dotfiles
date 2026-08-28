@@ -51,3 +51,64 @@ Managed by Mason, declared in `lua/plugins/lsp.lua` under `ensure_installed`: `l
 - `:Mason` — LSP server UI. `U` updates a package.
 - `:TSUpdate` — treesitter parsers. Required after a nvim-treesitter update; the pinned parser versions move with the plugin.
 - `:checkhealth` — first stop when something breaks.
+
+## Running this config in a container
+
+Bind the config in; never bind `~/.local/share/nvim`. That directory holds compiled treesitter parsers and Mason-installed language servers built for the **host** — Mach-O/arm64 on a Mac, which will not load on Linux. Give the container its own named volume and it builds its own Linux copies on first launch.
+
+| Mount | Why |
+|---|---|
+| `~/dotfiles/nvim` → `/root/.config/nvim` (`:ro`) | 44K of Lua, portable |
+| `~/.local/opt/nvim-linux-<arch>` → `/opt/nvim` (`:ro`) | a Linux nvim, so no image changes |
+| named volume → `/root/.local/share/nvim` | plugins + parsers, built for Linux |
+| named volume → `/root/.local/state/nvim` | undo history, lockfile fallback |
+
+```sh
+docker run --rm -it \
+  -v ~/dotfiles/nvim:/root/.config/nvim:ro \
+  -v ~/.local/opt/nvim-linux-arm64:/opt/nvim:ro \
+  -v nvim-data:/root/.local/share/nvim \
+  -v nvim-state:/root/.local/state/nvim \
+  -v "$PWD":/work -w /work \
+  <your-image> /opt/nvim/bin/nvim
+```
+
+Get the Linux nvim once, matching the container's architecture:
+
+```sh
+mkdir -p ~/.local/opt && cd ~/.local/opt
+curl -fsSL https://github.com/neovim/neovim/releases/download/v0.12.5/nvim-linux-arm64.tar.gz | tar -xz
+```
+
+As a compose fragment:
+
+```yaml
+services:
+  app:
+    volumes:
+      - ~/dotfiles/nvim:/root/.config/nvim:ro
+      - ~/.local/opt/nvim-linux-arm64:/opt/nvim:ro
+      - nvim-data:/root/.local/share/nvim
+      - nvim-state:/root/.local/state/nvim
+volumes:
+  nvim-data:
+  nvim-state:
+```
+
+**Requirements in the image.** glibc **2.33 or newer** — Ubuntu 22.04 works, 20.04 does not (`GLIBC_2.33 not found`). Plus `git`, `curl`, `ca-certificates`, a C compiler, and the `tree-sitter` CLI for building parsers:
+
+```sh
+apt-get install -y git curl ca-certificates build-essential
+curl -fsSL https://github.com/tree-sitter/tree-sitter/releases/download/v0.26.13/tree-sitter-linux-arm64.gz \
+  | gunzip > /usr/local/bin/tree-sitter && chmod +x /usr/local/bin/tree-sitter
+```
+
+The config mounts read-only safely: when `stdpath("config")` is not writable, `lazy.lua` puts `lazy-lock.json` in the state volume instead, so `:Lazy sync` works in the container without touching the repo copy.
+
+## Nix
+
+Nothing here is Nix-specific — it is plain Lua reading `~/.config/nvim`, so a `nix develop` shell needs no special handling.
+
+The one thing that matters: **launch nvim from inside the devshell**, not beside it. Language servers inherit the PATH of the process that spawns them, so `nix develop` then `nvim` gets the pinned toolchain, while `nvim` in another pane gets the host one and reports confusing errors.
+
+Where it does break is Mason on NixOS or a Nix-built container: Mason downloads prebuilt dynamically-linked binaries that expect an FHS layout, and there is no `/lib64/ld-linux-*` to load them. On macOS this does not arise. If it ever does, drop `ensure_installed` in `lua/plugins/lsp.lua` and let the devshell provide the servers — `vim.lsp.enable()` picks up anything on PATH.
